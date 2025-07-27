@@ -1,38 +1,47 @@
 import sys
-
 import pygame
+from time import sleep
 
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
 from alien import Alien
+from game_stats import GameStats
 
 class AlienInvasion():
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()
 
         self.clock = pygame.time.Clock()
         self.settings = Settings()
 
         self.screen = pygame.display.set_mode((self.settings.screen_width,self.settings.screen_height))
-        pygame.display.set_caption('My Little Polly')
+        pygame.display.set_caption('My Little Pony')
+
+        #加载背景音乐
+        pygame.mixer.music.load('sound/my little pony.mp3')
+        pygame.mixer.music.set_volume(0.5)
+        pygame.mixer.music.play(-1)
 
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
+        self.stats = GameStats(self)
 
-        self._create_fleat()
+        self._create_fleet()
 
 
         #设置背景颜色
         #self.bg_color = (249,241,249)
 
-    def _create_fleat(self):
+    def _create_fleet(self):
         alien = Alien(self)
         alien_width = alien.rect.width
         alien_height = alien.rect.height
 
         current_x ,current_y = alien_width,alien_height
+
         while current_y < (self.settings.screen_height - 3*alien_height):
             while current_x < (self.settings.screen_width - 2 * alien_width):
                 self._create_alien(current_x,current_y)
@@ -112,8 +121,14 @@ class AlienInvasion():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet) 
         print(self.bullets)
+        self._check_bullet_alien_collisions()
 
-        collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+    def _check_bullet_alien_collisions(self):
+        collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, False, True)
+
+        if not self.aliens:
+            self.bullets.empty()
+            self._create_fleet()
 
     def _check_fleet_edges(self):
         for alien in self.aliens.sprites():
@@ -131,11 +146,33 @@ class AlienInvasion():
         self._check_fleet_edges()
         self.aliens.update()
 
+        #检测外星人和飞船之间的碰撞
+        if pygame.sprite.spritecollideany(self.ship, self.aliens):
+            print("The magic of friendship!")
+
+        self._check_aliens_bottom
+
+    def _check_aliens_bottom(self):   
         #检查外星人是否到达屏幕底部
-        for alien in self.aliens.copy():
+        for alien in self.aliens.sprites():
             if alien.rect.bottom >= self.settings.screen_height:
-                print("An alien has reached the bottom of the screen!")
-                self.aliens.remove(alien)
+                self._ship_hit()
+                break
+
+    def _ship_hit(self):
+        #将ship_left减1
+        self.stats.ship_left -= 1
+
+        #清空外星人和子弹
+        self.bullets.empty()
+        self.aliens.empty()
+
+        #创建新的舰队
+        self._create_fleet()
+        self.ship.center_ship()
+
+        #暂停
+        sleep(0.5)
     
     def run_game(self):
         while True:
@@ -144,8 +181,6 @@ class AlienInvasion():
             self._update_bullets()
             self._update_aliens()
             self._update_screen()
-
-            
             
             #屏幕可见
             pygame.display.flip()
