@@ -21,5 +21,7 @@ class Settings:
         #fleet_direction为1表示向右移，为-1表示向左移
         self.fleet_direction = 1
 
+        self.alien_points = 50
+
 
         

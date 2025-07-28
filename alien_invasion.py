@@ -8,6 +8,7 @@ from bullet import Bullet
 from alien import Alien
 from game_stats import GameStats
 from button import Button
+from scoreboard import Scoreboard
 
 class AlienInvasion():
     def __init__(self):
@@ -36,6 +37,7 @@ class AlienInvasion():
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
         self.stats = GameStats(self)
+        self.scoreboard = Scoreboard(self)
 
         #游戏启动后处于活动状态
         self.game_active = False
@@ -87,6 +89,18 @@ class AlienInvasion():
     def _check_play_button(self,mouse_pos):
         if self.play_button.rect.collidepoint(mouse_pos):
             self.game_active = True
+
+            #重置游戏的统计信息
+            self.stats.reset_status()
+            self.scoreboard.prep_score()
+
+            #清空外星人类别和子弹列表
+            self.bullets.empty()
+            self.aliens.empty()
+
+            #创建一个新的外星人舰队，并将飞船放在屏幕的底部中央
+            self._create_fleet()
+            self.ship.center_ship()
      
                  
     def _check_keydown_event(self,event):
@@ -139,6 +153,7 @@ class AlienInvasion():
 
         self.ship.blitme()
         self.aliens.draw(self.screen)
+        self.scoreboard.show_score()
 
         if not self.game_active :
             self.play_button.draw_button()
@@ -155,7 +170,10 @@ class AlienInvasion():
 
     def _check_bullet_alien_collisions(self):
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, False, True)
-        
+        if collisions:
+            self.stats.score += self.settings.alien_points
+            self.scoreboard.prep_score()
+
         if collisions:
             #播放外星人被击中音效
             self.alien_hit_sound.play()
