@@ -7,6 +7,7 @@ from ship import Ship
 from bullet import Bullet
 from alien import Alien
 from game_stats import GameStats
+from button import Button
 
 class AlienInvasion():
     def __init__(self):
@@ -19,15 +20,26 @@ class AlienInvasion():
         self.screen = pygame.display.set_mode((self.settings.screen_width,self.settings.screen_height))
         pygame.display.set_caption('My Little Pony')
 
+        #加载背景图片
+        self.bg_image = pygame.image.load('image/forest.jpg')
+        self.bg_image = pygame.transform.scale(self.bg_image, (self.settings.screen_width, self.settings.screen_height))
+
         #加载背景音乐
         pygame.mixer.music.load('sound/my little pony.mp3')
         pygame.mixer.music.set_volume(0.5)
         pygame.mixer.music.play(-1)
 
+        #加载外星人被击中音效
+        self.alien_hit_sound = pygame.mixer.Sound('sound/碧琪.mp3')
+
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
         self.stats = GameStats(self)
+
+        #游戏启动后处于活动状态
+        self.game_active = False
+        self.play_button = Button(self,'Game Start')
 
         self._create_fleet()
 
@@ -68,9 +80,17 @@ class AlienInvasion():
                 self._check_keydown_event(event)            
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
-                
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self._check_play_button(mouse_pos)
+
+    def _check_play_button(self,mouse_pos):
+        if self.play_button.rect.collidepoint(mouse_pos):
+            self.game_active = True
+     
+                 
     def _check_keydown_event(self,event):
-        print(f"Pressed key: {event.key}")
+        #print(f"Pressed key: {event.key}")
         if event.key == pygame.K_RIGHT:
             #向右移动
             self.ship.moving_right = True
@@ -87,6 +107,13 @@ class AlienInvasion():
             sys.exit()
         if event.key == pygame.K_SPACE :
             self._fire_bullet()
+        if event.key == pygame.K_p:
+            if self.game_active:
+                self.game_active = False
+            else:
+                self.game_active = True
+
+        
 
     def _fire_bullet(self):
         if len(self.bullets) < self.settings.bullets_allowed:
@@ -106,12 +133,15 @@ class AlienInvasion():
                   
 
     def _update_screen(self):
-        self.screen.fill(self.settings.bg_color)
+        self.screen.blit(self.bg_image,(0,0))
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
 
         self.ship.blitme()
         self.aliens.draw(self.screen)
+
+        if not self.game_active :
+            self.play_button.draw_button()
 
     def _update_bullets(self):
         self.bullets.update()
@@ -120,12 +150,16 @@ class AlienInvasion():
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet) 
-        print(self.bullets)
+        #print(self.bullets)
         self._check_bullet_alien_collisions()
 
     def _check_bullet_alien_collisions(self):
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, False, True)
-
+        
+        if collisions:
+            #播放外星人被击中音效
+            self.alien_hit_sound.play()
+            
         if not self.aliens:
             self.bullets.empty()
             self._create_fleet()
@@ -149,6 +183,7 @@ class AlienInvasion():
         #检测外星人和飞船之间的碰撞
         if pygame.sprite.spritecollideany(self.ship, self.aliens):
             print("The magic of friendship!")
+            self._ship_hit()
 
         self._check_aliens_bottom
 
@@ -160,26 +195,32 @@ class AlienInvasion():
                 break
 
     def _ship_hit(self):
-        #将ship_left减1
-        self.stats.ship_left -= 1
+        if self.stats.ships_left > 0 :
+            #将ship_left减1
+            self.stats.ships_left -= 1
 
-        #清空外星人和子弹
-        self.bullets.empty()
-        self.aliens.empty()
+            #清空外星人和子弹
+            self.bullets.empty()
+            self.aliens.empty()
 
-        #创建新的舰队
-        self._create_fleet()
-        self.ship.center_ship()
+            #创建新的舰队
+            self._create_fleet()
+            self.ship.center_ship()
 
-        #暂停
-        sleep(0.5)
+            #暂停
+            sleep(0.5)
+        else:
+            self.game_active = False
     
     def run_game(self):
         while True:
             self._check_events()
-            self.ship.update()
-            self._update_bullets()
-            self._update_aliens()
+
+            if self.game_active:
+                self.ship.update()
+                self._update_bullets()
+                self._update_aliens()
+
             self._update_screen()
             
             #屏幕可见
