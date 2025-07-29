@@ -1,6 +1,7 @@
 import sys
 import pygame
 from time import sleep
+import random
 
 from settings import Settings
 from ship import Ship
@@ -67,7 +68,9 @@ class AlienInvasion():
             current_y += 2*alien_height
 
     def _create_alien(self,x_position,y_position):
-        new_alien = Alien(self)
+        alien_types =random.choice(['碧琪', '紫悦', '珍奇', '柔柔', '云宝', '苹果嘉儿'])
+        
+        new_alien = Alien(self, alien_type=alien_types)
         new_alien.x = x_position
         new_alien.rect.x = new_alien.x
         new_alien.rect.y = y_position
@@ -175,8 +178,12 @@ class AlienInvasion():
             self.scoreboard.prep_score()
 
         if collisions:
-            #播放外星人被击中音效
-            self.alien_hit_sound.play()
+            for aliens in collisions.values():
+                for alien in aliens:
+                    if isinstance(alien, Alien) and alien.alien_type == '碧琪':
+                        self.alien_hit_sound.play()
+
+            
             
         if not self.aliens:
             self.bullets.empty()

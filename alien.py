@@ -2,13 +2,26 @@ import pygame
 from pygame.sprite import Sprite
 
 class Alien(Sprite):
-    def __init__(self, ai_game):
+    def __init__(self, ai_game,alien_type='碧琪'):
         super().__init__()
         self.screen = ai_game.screen
         self.settings = ai_game.settings
+        self.alien_type = alien_type
 
         #加载外星人图像并设置其rect属性
-        self.image = pygame.image.load('image/碧琪.png')
+        if alien_type == '碧琪':
+            self.image = pygame.image.load('image/碧琪.png')
+        if alien_type == '紫悦':
+            self.image = pygame.image.load('image/紫悦.png')
+        if alien_type == '珍奇':
+            self.image = pygame.image.load('image/珍奇.png')
+        if alien_type == '柔柔':
+            self.image = pygame.image.load('image/柔柔.png')
+        if alien_type == '云宝':
+            self.image = pygame.image.load('image/云宝.png')
+        if alien_type == '苹果嘉儿':
+            self.image = pygame.image.load('image/苹果嘉儿.png')
+
         self.rect = self.image.get_rect()
 
         #每个外星人最初都在屏幕左上角附近
