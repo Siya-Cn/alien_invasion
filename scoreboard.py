@@ -1,5 +1,6 @@
 import pygame.font
-
+from pathlib import Path
+import json
 
 class Scoreboard:
     def __init__(self,ai_game):
@@ -26,6 +27,12 @@ class Scoreboard:
         self.high_score_rect = self.high_score_image.get_rect()
         self.high_score_rect.centerx = self.screen_rect.centerx
         self.high_score_rect.top = self.screen_rect.top
+
+        '''
+        path = Path('self.high_score_rect.top.json')
+        contents = json.dumps(self.high_score_rect.top)
+        path.write_text(contents)
+        '''
 
     def prep_score(self):
         score_str = str(self.stats.score)
