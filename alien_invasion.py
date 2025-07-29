@@ -105,6 +105,8 @@ class AlienInvasion():
             #创建一个新的外星人舰队，并将飞船放在屏幕的底部中央
             self._create_fleet()
             self.ship.center_ship()
+
+            self.scoreboard.prep_ships()
      
                  
     def _check_keydown_event(self,event):
@@ -226,6 +228,7 @@ class AlienInvasion():
         if self.stats.ships_left > 0 :
             #将ship_left减1
             self.stats.ships_left -= 1
+            self.scoreboard.prep_ships()
 
             #清空外星人和子弹
             self.bullets.empty()
